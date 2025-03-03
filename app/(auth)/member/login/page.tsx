@@ -190,7 +190,7 @@ export default function AdminLogin() {
                 <div className="text-sm">
                   Don&apos;t have an account?{" "}
                   <Link
-                    href="/user/register"
+                    href="/member/register"
                     className="font-medium text-blue-600 hover:text-blue-500"
                   >
                     Sign up
