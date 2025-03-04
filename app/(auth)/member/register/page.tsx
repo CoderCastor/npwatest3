@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { EyeIcon, EyeOffIcon } from "lucide-react"; // Import icons from lucide-react
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function RegistrationForm() {
   const router = useRouter();
@@ -16,6 +16,7 @@ export default function RegistrationForm() {
     institution: "",
     passingYear: "",
     experience: "",
+    membership: "", // New membership field
     password: "",
     confirmPassword: "",
   });
@@ -30,11 +31,13 @@ export default function RegistrationForm() {
     setError("");
     setLoading(true);
 
+    // Updated validation to include membership check
     if (
       !formData.fullName.trim() ||
       !formData.email.trim() ||
       !formData.password.trim() ||
-      !formData.confirmPassword.trim()
+      !formData.confirmPassword.trim() ||
+      !formData.membership.trim() // Added membership validation
     ) {
       setError("Please fill in all required fields");
       setLoading(false);
@@ -162,6 +165,23 @@ export default function RegistrationForm() {
                 setFormData({ ...formData, experience: e.target.value })
               }
             />
+
+            {/* New Membership Dropdown */}
+            <select
+              className="w-full p-2 border rounded-md"
+              value={formData.membership}
+              onChange={(e) =>
+                setFormData({ ...formData, membership: e.target.value })
+              }
+              required
+            >
+              <option value="" disabled>
+                Select Membership Type
+              </option>
+              <option value="Premium">Premium Membership</option>
+              <option value="Gold">Gold Membership</option>
+              <option value="Platinum">Platinum Membership</option>
+            </select>
 
             {/* Password Input with Eye Icon */}
             <div className="relative">

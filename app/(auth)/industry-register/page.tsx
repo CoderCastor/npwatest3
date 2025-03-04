@@ -1,7 +1,25 @@
-"use client";
+"use client"; // This tells Next.js that this file is a client component
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
+// Define the shape of the formData object
+interface FormData {
+  organization_name: string;
+  registration_number: string;
+  owner_name: string;
+  email_address: string;
+  phone_number: string;
+  license_number: string;
+  year_established: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,24 +37,26 @@ const EyeOffIcon = () => (
 
 export default function IndustryRegistration() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    organizationName: "",
-    registrationNumber: "",
-    ownerName: "",
-    email: "",
-    phone: "",
+
+  // Set the form data with the defined type
+  const [formData, setFormData] = useState<FormData>({
+    organization_name: "",
+    registration_number: "",
+    owner_name: "",
+    email_address: "",
+    phone_number: "",
+    license_number: "",
+    year_established: "",
     address: "",
     city: "",
     state: "",
     pincode: "",
-    licenseNumber: "",
-    yearEstablished: "",
     password: "",
     confirmPassword: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -45,37 +65,33 @@ export default function IndustryRegistration() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { confirmPassword, ...dataToSend } = formData; // Exclude confirmPassword from the request
+      await axios.post("http://localhost:5000/industry-register", dataToSend);
       setSuccessMessage("Industry registered successfully!");
       setError("");
-      setFormData({
-        organizationName: "",
-        registrationNumber: "",
-        ownerName: "",
-        email: "",
-        phone: "",
-        address: "",
-        city: "",
-        state: "",
-        pincode: "",
-        licenseNumber: "",
-        yearEstablished: "",
-        password: "",
-        confirmPassword: "",
-      });
       setTimeout(() => {
-        router.push("/"); // Change "/home" to your desired landing page
+        router.push("/"); // Redirect to home page
       }, 2000);
-    }, 2000);
+    } catch (error) {
+      setError("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Filter out password and confirmPassword from the main input fields
+  const mainInputFields = Object.keys(formData).filter(
+    key => !['password', 'confirmPassword'].includes(key)
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -87,46 +103,70 @@ export default function IndustryRegistration() {
           </p>
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {/* Organization Details */}
-            <input type="text" name="organizationName" placeholder="Organization Name" value={formData.organizationName} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="registrationNumber" placeholder="Registration Number" value={formData.registrationNumber} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="ownerName" placeholder="Owner Name" value={formData.ownerName} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="licenseNumber" placeholder="License Number" value={formData.licenseNumber} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="yearEstablished" placeholder="Year Established" value={formData.yearEstablished} onChange={handleChange} className="border p-2 rounded w-full" required />
-            
-            {/* Address */}
-            <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="city" placeholder="City" value={formData.city} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="state" placeholder="State" value={formData.state} onChange={handleChange} className="border p-2 rounded w-full" required />
-            <input type="text" name="pincode" placeholder="Pincode" value={formData.pincode} onChange={handleChange} className="border p-2 rounded w-full" required />
+            {mainInputFields.map((key) => (
+              <input
+                key={key}
+                type="text"
+                name={key}
+                placeholder={key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
+                value={formData[key as keyof FormData]}
+                onChange={handleChange}
+                className="border p-2 rounded w-full"
+                required
+                aria-label={key}
+              />
+            ))}
           </div>
 
-          {/* Password Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} name="password" placeholder="Password" value={formData.password} onChange={handleChange} className="border p-2 rounded w-full" required />
-              <button type="button" className="absolute top-2 right-3 text-gray-500" onClick={() => setShowPassword(!showPassword)}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                className="border p-2 rounded w-full"
+                required
+                aria-label="password"
+              />
+              <button 
+                type="button" 
+                className="absolute top-2 right-3 text-gray-500" 
+                onClick={() => setShowPassword(!showPassword)} 
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
+
             <div className="relative">
-              <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" placeholder="Confirm Password" value={formData.confirmPassword} onChange={handleChange} className="border p-2 rounded w-full" required />
-              <button type="button" className="absolute top-2 right-3 text-gray-500" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="border p-2 rounded w-full"
+                required
+                aria-label="confirm password"
+              />
+              <button 
+                type="button" 
+                className="absolute top-2 right-3 text-gray-500" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
                 {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
 
-          {/* Error & Success Messages */}
           {error && <div className="text-red-600 text-sm bg-red-100 p-3 rounded">{error}</div>}
           {successMessage && <div className="text-green-600 text-sm bg-green-100 p-3 rounded">{successMessage}</div>}
 
-          {/* Submit Button */}
           <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition">
             {loading ? "Registering..." : "Register"}
           </button>
