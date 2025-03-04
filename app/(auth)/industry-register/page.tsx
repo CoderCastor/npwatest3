@@ -82,6 +82,7 @@ export default function IndustryRegistration() {
         router.push("/"); // Redirect to home page
       }, 2000);
     } catch (error) {
+      console.log(error)
       setError("Registration failed. Please try again.");
     } finally {
       setLoading(false);
